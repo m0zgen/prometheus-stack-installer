@@ -37,8 +37,35 @@ _exit() {
 }
 
 # Options
-# setup yml
-setupYml() {
+setupNodeExporter() {
+
+echo -e '[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+[Install]
+WantedBy=multi-user.target' > /etc/systemd/system/node_exporter.service
+
+systemctl daemon-reload
+systemctl enable --now node_exporter
+
+echo -e "Setup complete.
+Add the following lines to /etc/prometheus/prometheus.yml:
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']
+"
+
+}
+
+
+setupPrometheusSVC() {
     # setup systemd
 echo -e '[Unit]
 Description=Prometheus
@@ -59,12 +86,31 @@ WantedBy=multi-user.target' > /etc/systemd/system/prometheus.service
 systemctl daemon-reload
 systemctl enable --now prometheus
 
+firewall-cmd --add-port=9090/tcp --permanent
+firewall-cmd --reload
+
 }
 
 # Installers
-#installExporter() {
-#
-#}
+installExporter() {
+
+    cd $SCRIPT_PATH
+    local _binary=`curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep browser_download_url | grep "linux-amd64" | awk '{print $2}' | tr -d '\"'`
+
+    if [[ ! -d "$_install" ]]; then
+        mkdir $_install
+    fi
+    cd $_install
+    
+    wget $_binary; tar -xvf $(ls prometheus*.tar.gz)
+    cd `ls -l | grep '.linux-amd[0-9]*$' | awk '{print $9}'`
+    cp node_exporter /usr/local/bin
+
+    # create user
+    useradd --no-create-home --shell /bin/false node_exporter
+    chown node_exporter:node_exporter /usr/local/bin/node_exporter
+
+}
 
 installPrometheus() {
     
@@ -72,7 +118,6 @@ installPrometheus() {
     useradd -m -s /bin/false prometheus
     chown prometheus:prometheus /etc/prometheus
     chown prometheus:prometheus /var/lib/prometheus
-
 
     dnf install wget -y
 
@@ -98,6 +143,9 @@ installPrometheus() {
     cp prometheus.yml /etc/prometheus/prometheus.yml
 
     setupYml
+
+    rm -rf $_install
+    echo "Prometheus installed!"
 
 }
 
