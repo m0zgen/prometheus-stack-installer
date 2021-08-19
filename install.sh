@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+#
+# Install Prometheus, Node Exporter to CentOS
+# Initial script
+# Created by Yevgeniy Goncharov, https://sys-adm.in
+# Creation at (c) 2021.
+#
+
+# Envs
+# ---------------------------------------------------\
+PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+SCRIPT_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
+
+# POSIX / Reset in case getopts has been used previously in the shell.
+OPTIND=1
+
+_configPrometheus="/etc/prometheus/prometheus.yml"
+_install=$SCRIPT_PATH/installs
+
+# Functions
+confirm() {
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [y/N]} " response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+_exit() {
+    echo "Bye bye!"
+    exit 0
+}
+
+# Options
+# setup yml
+setupYml() {
+    # setup systemd
+echo -e '[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/prometheus \
+    --config.file /etc/prometheus/prometheus.yml \
+    --storage.tsdb.path /var/lib/prometheus/ \
+    --web.console.templates=/etc/prometheus/consoles \
+    --web.console.libraries=/etc/prometheus/console_libraries
+[Install]
+WantedBy=multi-user.target' > /etc/systemd/system/prometheus.service
+
+systemctl daemon-reload
+systemctl enable --now prometheus
+
+}
+
+# Installers
+#installExporter() {
+#
+#}
+
+installPrometheus() {
+    
+    mkdir /var/lib/prometheus /etc/prometheus 
+    useradd -m -s /bin/false prometheus
+    chown prometheus:prometheus /etc/prometheus
+    chown prometheus:prometheus /var/lib/prometheus
+
+
+    dnf install wget -y
+
+    cd $SCRIPT_PATH
+    local _binary=`curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep "linux-amd64" | awk '{print $2}' | tr -d '\"'`
+    
+    if [[ ! -d "$_install" ]]; then
+        mkdir $_install
+    fi
+    cd $_install
+    wget $_binary; tar -xvf $(ls prometheus*.tar.gz)
+    cd `ls -l | grep '.linux-amd[0-9]*$' | awk '{print $9}'`
+
+    cp prometheus  /usr/local/bin
+    cp promtool  /usr/local/bin
+
+    chown prometheus:prometheus /usr/local/bin/prometheus
+    chown prometheus:prometheus /usr/local/bin/promtool
+
+    # copy config
+    cp -r consoles /etc/prometheus
+    cp -r console_libraries /etc/prometheus
+    cp prometheus.yml /etc/prometheus/prometheus.yml
+
+    setupYml
+
+}
+
+function setChoise()
+{
+    echo -e "What do you want install?\n"
+    echo "   1) Exporter"
+    echo "   2) Prometheus"
+    echo "   3) Exit"
+    echo ""
+    read -p "Install [1-3]: " -e -i 3 INSTALL_CHOICE
+
+    case $INSTALL_CHOICE in
+        1)
+        _installExporter=1
+        ;;
+        2)
+        _installServer=1
+        ;;
+        3)
+        _exit
+        ;;
+    esac
+
+    if [[ "$_installExporter" == 1 ]]; then
+        if confirm "Install Node Exporter (y/n)?"; then
+
+            if [ -f $__existConfig ]; then
+                echo "Node Exporter already installed!"
+                _exit
+            else
+                read -p 'Prometheus server ip: ' _ip
+                $SCRIPT_PATH/modules/exporter.sh $_ip
+            fi
+
+        fi
+    fi
+
+    if [[ "$_installServer" == 1 ]]; then
+        if confirm "Install Prometheus (y/n)?"; then
+
+            if [ -f $__existConfig ]; then
+                echo "Prometheus already installed!"
+                _exit
+            else
+                installPrometheus
+            fi
+
+        fi
+    fi
+
+}
+
+setChoise
