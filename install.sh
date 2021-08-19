@@ -55,7 +55,12 @@ WantedBy=multi-user.target' > /etc/systemd/system/node_exporter.service
 systemctl daemon-reload
 systemctl enable --now node_exporter
 
-firewall-cmd --add-port=9100/tcp  --permanent
+if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
+    firewall-cmd --permanent --add-port=9100/tcp --zone=internal
+else
+    firewall-cmd --permanent --add-port=9100/tcp
+fi
+
 firewall-cmd --reload
 
 }
@@ -81,7 +86,12 @@ WantedBy=multi-user.target' > /etc/systemd/system/prometheus.service
 systemctl daemon-reload
 systemctl enable --now prometheus
 
-firewall-cmd --add-port=9090/tcp --permanent
+if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
+    firewall-cmd --permanent --add-port=9090/tcp --zone=internal
+else
+    firewall-cmd --permanent --add-port=9090/tcp
+fi
+
 firewall-cmd --reload
 
 }
@@ -126,11 +136,7 @@ installExporter() {
     static_configs:
       - targets: ['localhost:9100']
 
-    or
-
-  - job_name: 'node_exporter'
-    scrape_interval: 5s
-    static_configs:
+    or just add to exist yml file to node_exporter section:
       - targets: ['$_serverIP:9100'] 
 "
     echo "node_exporter is installed!"
