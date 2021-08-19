@@ -16,6 +16,7 @@ OPTIND=1
 
 _configPrometheus="/etc/prometheus/prometheus.yml"
 _install=$SCRIPT_PATH/installs
+_serverIP=`hostname -I`
 
 # Functions
 confirm() {
@@ -130,7 +131,7 @@ installExporter() {
   - job_name: 'node_exporter'
     scrape_interval: 5s
     static_configs:
-      - targets: ['<remote server ip>:9100'] 
+      - targets: ['$_serverIP:9100'] 
 "
     echo "node_exporter is installed!"
 
