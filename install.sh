@@ -142,7 +142,7 @@ installPrometheus() {
     cp -r console_libraries /etc/prometheus
     cp prometheus.yml /etc/prometheus/prometheus.yml
 
-    setupYml
+    setupPrometheusSVC
 
     rm -rf $_install
     echo "Prometheus installed!"
@@ -177,8 +177,9 @@ function setChoise()
                 echo "Node Exporter already installed!"
                 _exit
             else
-                read -p 'Prometheus server ip: ' _ip
-                $SCRIPT_PATH/modules/exporter.sh $_ip
+                # read -p 'Prometheus server ip: ' _ip
+                # $SCRIPT_PATH/modules/exporter.sh $_ip
+                installExporter
             fi
 
         fi
