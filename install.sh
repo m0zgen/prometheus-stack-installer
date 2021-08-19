@@ -172,16 +172,8 @@ function setChoise()
 
     if [[ "$_installExporter" == 1 ]]; then
         if confirm "Install Node Exporter (y/n)?"; then
-
-            if [ -f $_configPrometheus ]; then
-                echo "Node Exporter already installed!"
-                _exit
-            else
-                # read -p 'Prometheus server ip: ' _ip
-                # $SCRIPT_PATH/modules/exporter.sh $_ip
+                
                 installExporter
-            fi
-
         fi
     fi
 
