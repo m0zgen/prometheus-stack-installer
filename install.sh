@@ -86,24 +86,28 @@ firewall-cmd --reload
 # Installers
 installExporter() {
 
-    cd $SCRIPT_PATH
-    local _binary=`curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep browser_download_url | grep "linux-amd64" | awk '{print $2}' | tr -d '\"'`
+    # Temporary catalog
+    cd $SCRIPT_PATH; mkdir $_install; cd $_install
 
-    if [[ ! -d "$_install" ]]; then
-        mkdir $_install
+    # Check is wget installed
+    if ! type "wget" >/dev/null 2>&1; then
+        dnf install wget -y
     fi
-    cd $_install
-    
+
+    # Download Node Exporter
+    local _binary=`curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep browser_download_url | grep "linux-amd64" | awk '{print $2}' | tr -d '\"'`
     wget $_binary; tar -xvf $(ls prometheus*.tar.gz)
     cd `ls -l | grep '.linux-amd[0-9]*$' | awk '{print $9}'`
     cp node_exporter /usr/local/bin
 
-    # create user
+    # Create user
     useradd --no-create-home --shell /bin/false node_exporter
     chown node_exporter:node_exporter /usr/local/bin/node_exporter
 
+    # Setup systemd unit
     setupNodeExporter
 
+    # User suggestion
     echo -e "Setup complete.
 Add the following lines to /etc/prometheus/prometheus.yml:
   - job_name: 'node_exporter'
@@ -115,40 +119,42 @@ Add the following lines to /etc/prometheus/prometheus.yml:
 }
 
 installPrometheus() {
-    
-    mkdir /var/lib/prometheus /etc/prometheus 
-    useradd -m -s /bin/false prometheus
-    chown prometheus:prometheus /etc/prometheus
-    chown prometheus:prometheus /var/lib/prometheus
 
-    dnf install wget -y
-
-    cd $SCRIPT_PATH
-    local _binary=`curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep "linux-amd64" | awk '{print $2}' | tr -d '\"'`
+    # Temporary catalog
+    cd $SCRIPT_PATH; mkdir $_install; cd $_install
     
-    if [[ ! -d "$_install" ]]; then
-        mkdir $_install
+    # Check is wget installed
+    if ! type "wget" >/dev/null 2>&1; then
+        dnf install wget -y
     fi
-    cd $_install
+    
+    # Download latest release
+    local _binary=`curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep "linux-amd64" | awk '{print $2}' | tr -d '\"'`
     wget $_binary; tar -xvf $(ls prometheus*.tar.gz)
     cd `ls -l | grep '.linux-amd[0-9]*$' | awk '{print $9}'`
 
+    # User in catalogs creation 
+    useradd -m -s /bin/false prometheus
+    mkdir /var/lib/prometheus /etc/prometheus 
+    chown prometheus:prometheus /etc/prometheus
+    chown prometheus:prometheus /var/lib/prometheus
+
+    # Copy executable and set permissions
     cp prometheus  /usr/local/bin
     cp promtool  /usr/local/bin
 
     chown prometheus:prometheus /usr/local/bin/prometheus
     chown prometheus:prometheus /usr/local/bin/promtool
 
-    # copy config
+    # Copy config
     cp -r consoles /etc/prometheus
     cp -r console_libraries /etc/prometheus
     cp prometheus.yml /etc/prometheus/prometheus.yml
 
+    # Setup systemd unit
     setupPrometheusSVC
 
-    rm -rf $_install
     echo "Prometheus installed!"
-
 }
 
 function setChoise()
