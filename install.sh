@@ -125,7 +125,7 @@ function setChoise()
     if [[ "$_installExporter" == 1 ]]; then
         if confirm "Install Node Exporter (y/n)?"; then
 
-            if [ -f $__existConfig ]; then
+            if [ -f $_configPrometheus ]; then
                 echo "Node Exporter already installed!"
                 _exit
             else
@@ -139,7 +139,7 @@ function setChoise()
     if [[ "$_installServer" == 1 ]]; then
         if confirm "Install Prometheus (y/n)?"; then
 
-            if [ -f $__existConfig ]; then
+            if [ -f $_configPrometheus ]; then
                 echo "Prometheus already installed!"
                 _exit
             else
