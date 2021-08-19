@@ -16,7 +16,7 @@ OPTIND=1
 
 _configPrometheus="/etc/prometheus/prometheus.yml"
 _install=$SCRIPT_PATH/installs
-_serverIP=`hostname -I`
+_serverIP=`hostname -I | awk '{print $1}'`
 
 # Functions
 confirm() {
