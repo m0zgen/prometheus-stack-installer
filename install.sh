@@ -105,7 +105,7 @@ installExporter() {
 
     # Download Node Exporter
     local _binary=`curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep browser_download_url | grep "linux-amd64" | awk '{print $2}' | tr -d '\"'`
-    wget $_binary; tar -xvf $(ls prometheus*.tar.gz)
+    wget $_binary; tar -xvf $(ls node_exporter*.tar.gz)
     cd `ls -l | grep '.linux-amd[0-9]*$' | awk '{print $9}'`
     cp node_exporter /usr/local/bin
 
