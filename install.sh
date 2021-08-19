@@ -54,6 +54,9 @@ WantedBy=multi-user.target' > /etc/systemd/system/node_exporter.service
 systemctl daemon-reload
 systemctl enable --now node_exporter
 
+firewall-cmd --add-port=9100/tcp  --permanent
+firewall-cmd --reload
+
 }
 
 setupPrometheusSVC() {
@@ -80,17 +83,6 @@ systemctl enable --now prometheus
 firewall-cmd --add-port=9090/tcp --permanent
 firewall-cmd --reload
 
-}
-
-addExporterToConfig() {
-    # User suggestion
-    echo -e "
-  - job_name: 'node_exporter'
-    scrape_interval: 5s
-    static_configs:
-      - targets: ['localhost:9100']" >> $_configPrometheus
-
-    echo "$_configPrometheus is updated"
 }
 
 # Installers
@@ -127,11 +119,18 @@ installExporter() {
     setupNodeExporter
 
     # User suggestion
-    echo -e "Check the following lines to /etc/prometheus/prometheus.yml:
+    echo -e "Add the following lines to /etc/prometheus/prometheus.yml:
   - job_name: 'node_exporter'
     scrape_interval: 5s
     static_configs:
       - targets: ['localhost:9100']
+
+    or
+
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['<remote server ip>:9100'] 
 "
     echo "node_exporter is installed!"
 
