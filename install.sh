@@ -54,14 +54,6 @@ WantedBy=multi-user.target' > /etc/systemd/system/node_exporter.service
 systemctl daemon-reload
 systemctl enable --now node_exporter
 
-echo -e "Setup complete.
-Add the following lines to /etc/prometheus/prometheus.yml:
-  - job_name: 'node_exporter'
-    scrape_interval: 5s
-    static_configs:
-      - targets: ['localhost:9100']
-"
-
 }
 
 
@@ -109,6 +101,16 @@ installExporter() {
     # create user
     useradd --no-create-home --shell /bin/false node_exporter
     chown node_exporter:node_exporter /usr/local/bin/node_exporter
+
+    setupNodeExporter
+
+    echo -e "Setup complete.
+Add the following lines to /etc/prometheus/prometheus.yml:
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']
+"
 
 }
 
