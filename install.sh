@@ -87,7 +87,16 @@ firewall-cmd --reload
 installExporter() {
 
     # Temporary catalog
-    cd $SCRIPT_PATH; mkdir $_install; cd $_install
+    cd $SCRIPT_PATH
+
+    # Temporary catalog
+    if [[ ! -d "$_install" ]]; then
+        mkdir $_install
+    else
+        rm -rf $_install; mkdir $_install
+    fi
+
+    cd $_install; 
 
     # Check is wget installed
     if ! type "wget" >/dev/null 2>&1; then
@@ -120,8 +129,16 @@ Add the following lines to /etc/prometheus/prometheus.yml:
 
 installPrometheus() {
 
+    cd $SCRIPT_PATH; 
+
     # Temporary catalog
-    cd $SCRIPT_PATH; mkdir $_install; cd $_install
+    if [[ ! -d "$_install" ]]; then
+        mkdir $_install
+    else
+        rm -rf $_install; mkdir $_install
+    fi
+
+    cd $_install; 
     
     # Check is wget installed
     if ! type "wget" >/dev/null 2>&1; then
