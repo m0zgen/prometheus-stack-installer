@@ -190,12 +190,17 @@ installPrometheus() {
     echo "Prometheus installed!"
 }
 
+installGrafana() {
+  echo 'Install Grafana!'
+}
+
 function setChoise()
 {
     echo -e "What do you want install?\n"
     echo "   1) Exporter"
     echo "   2) Prometheus"
-    echo "   3) Exit"
+    echo "   3) Grafana"
+    echo "   4) Exit"
     echo ""
     read -p "Install [1-3]: " -e -i 3 INSTALL_CHOICE
 
@@ -205,8 +210,10 @@ function setChoise()
         ;;
         2)
         _installServer=1
-        ;;
         3)
+        _installGrafana=1
+        ;;
+        4)
         _exit
         ;;
     esac
@@ -226,6 +233,16 @@ function setChoise()
                 _exit
             else
                 installPrometheus
+            fi
+
+        fi
+    fi
+
+    if [[ "$_installGrafana" == 1 ]]; then
+        if confirm "Install Grafana (y/n)?"; then
+
+            if [ -f $_configPrometheus ]; then
+                installGrafana
             fi
 
         fi
