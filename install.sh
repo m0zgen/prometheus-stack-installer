@@ -202,9 +202,9 @@ gpgcheck=1
 gpgkey=https://packages.grafana.com/gpg.key
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
-" >> /etc/yum.repos.d/grafana.repo
+" > /etc/yum.repos.d/grafana.repo
 
-dnf install grafana -y
+yum install grafana -y
 
 systemctl daemon-reload
 systemctl enable --now grafana-server
