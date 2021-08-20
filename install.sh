@@ -210,8 +210,11 @@ systemctl daemon-reload
 systemctl enable --now grafana-server
 sleep 2
 
+grafana-cli plugins install grafana-piechart-panel
 sed -i 's/;admin_user/admin_user/g' /etc/grafana/grafana.ini
 sed -i 's/;admin_password/admin_password/g' /etc/grafana/grafana.ini
+sed -i 's/;disable_sanitize_html.*/disable_sanitize_html = true/g' /etc/grafana/grafana.ini
+# grafana-cli --config "/etc/grafana/grafana.ini" admin reset-admin-password NEWPASS
 systemctl restart grafana-server
 systemctl status grafana-server
 
