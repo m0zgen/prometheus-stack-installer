@@ -191,7 +191,35 @@ installPrometheus() {
 }
 
 installGrafana() {
-  echo 'Install Grafana!'
+  
+  echo -e "
+[grafana]
+name=grafana
+baseurl=https://packages.grafana.com/oss/rpm
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.grafana.com/gpg.key
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+" >> /etc/yum.repos.d/grafana.repo
+
+dnf install grafana -y
+
+sed -i 's/;admin_user/admin_user/g' /etc/grafana/grafana.ini
+sed -i 's/;admin_password/admin_password/g' /etc/grafana/grafana.ini
+
+systemctl daemon-reload
+systemctl enable --now grafana-server
+
+if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
+    firewall-cmd --permanent --add-port=3000/tcp --zone=internal
+else
+    firewall-cmd --permanent --add-port=3000/tcp
+fi
+
+firewall-cmd --reload
+
 }
 
 function setChoise()
@@ -202,7 +230,7 @@ function setChoise()
     echo "   3) Grafana"
     echo "   4) Exit"
     echo ""
-    read -p "Install [1-3]: " -e -i 3 INSTALL_CHOICE
+    read -p "Install [1-4]: " -e -i 4 INSTALL_CHOICE
 
     case $INSTALL_CHOICE in
         1)
@@ -210,6 +238,7 @@ function setChoise()
         ;;
         2)
         _installServer=1
+        ;;
         3)
         _installGrafana=1
         ;;
