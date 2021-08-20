@@ -206,11 +206,15 @@ sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 
 dnf install grafana -y
 
-sed -i 's/;admin_user/admin_user/g' /etc/grafana/grafana.ini
-sed -i 's/;admin_password/admin_password/g' /etc/grafana/grafana.ini
-
 systemctl daemon-reload
 systemctl enable --now grafana-server
+sleep 2
+
+sed -i 's/;admin_user/admin_user/g' /etc/grafana/grafana.ini
+sed -i 's/;admin_password/admin_password/g' /etc/grafana/grafana.ini
+systemctl restart grafana-server
+systemctl status grafana-server
+
 
 if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
     firewall-cmd --permanent --add-port=3000/tcp --zone=internal
