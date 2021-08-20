@@ -249,7 +249,6 @@ function setChoise()
 
     if [[ "$_installExporter" == 1 ]]; then
         if confirm "Install Node Exporter (y/n)?"; then
-                
                 installExporter
         fi
     fi
@@ -269,11 +268,7 @@ function setChoise()
 
     if [[ "$_installGrafana" == 1 ]]; then
         if confirm "Install Grafana (y/n)?"; then
-
-            if [ -f $_configPrometheus ]; then
                 installGrafana
-            fi
-
         fi
     fi
 
