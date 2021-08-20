@@ -19,6 +19,16 @@ _install=$SCRIPT_PATH/installs
 _serverIP=`hostname -I | awk '{print $1}'`
 
 # Functions
+
+# Help information
+usage() {
+
+    echo -e "You can also use this script for automate install prometheus stack:"
+    echo -e "$ON_CHECK" "./install.sh -a : Auto-install and configure all software"
+    exit 1
+
+}
+
 confirm() {
     # call with a prompt string or use a default
     read -r -p "${1:-Are you sure? [y/N]} " response
@@ -55,10 +65,14 @@ WantedBy=multi-user.target' > /etc/systemd/system/node_exporter.service
 systemctl daemon-reload
 systemctl enable --now node_exporter
 
-if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
-    firewall-cmd --permanent --add-port=9100/tcp --zone=internal
-else
+if [[ "$1" -eq "auto" ]]; then
     firewall-cmd --permanent --add-port=9100/tcp
+else
+    if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
+        firewall-cmd --permanent --add-port=9100/tcp --zone=internal
+    else
+        firewall-cmd --permanent --add-port=9100/tcp
+    fi
 fi
 
 firewall-cmd --reload
@@ -86,10 +100,14 @@ WantedBy=multi-user.target' > /etc/systemd/system/prometheus.service
 systemctl daemon-reload
 systemctl enable --now prometheus
 
-if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
-    firewall-cmd --permanent --add-port=9090/tcp --zone=internal
-else
+if [[ "$1" -eq "auto" ]]; then
     firewall-cmd --permanent --add-port=9090/tcp
+else
+    if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
+        firewall-cmd --permanent --add-port=9090/tcp --zone=internal
+    else
+        firewall-cmd --permanent --add-port=9090/tcp
+    fi
 fi
 
 firewall-cmd --reload
@@ -214,19 +232,28 @@ grafana-cli plugins install grafana-piechart-panel
 sed -i 's/;admin_user/admin_user/g' /etc/grafana/grafana.ini
 sed -i 's/;admin_password/admin_password/g' /etc/grafana/grafana.ini
 sed -i 's/;disable_sanitize_html.*/disable_sanitize_html = true/g' /etc/grafana/grafana.ini
-# grafana-cli --config "/etc/grafana/grafana.ini" admin reset-admin-password NEWPASS
+grafana-cli --config "/etc/grafana/grafana.ini" admin reset-admin-password NEWPASS
 systemctl restart grafana-server
-systemctl status grafana-server
+# systemctl status grafana-server
 
-
-if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
-    firewall-cmd --permanent --add-port=3000/tcp --zone=internal
-else
+if [[ "$1" -eq "auto" ]]; then
     firewall-cmd --permanent --add-port=3000/tcp
+else
+    if confirm "Setup firewalld to INternal zone? (y/n or enter)"; then
+        firewall-cmd --permanent --add-port=3000/tcp --zone=internal
+    else
+        firewall-cmd --permanent --add-port=3000/tcp
+    fi
 fi
 
 firewall-cmd --reload
 
+}
+
+auto_install() {
+    installPrometheus auto
+    installExporter auto
+    installGrafana auto
 }
 
 function setChoise()
@@ -235,9 +262,10 @@ function setChoise()
     echo "   1) Exporter"
     echo "   2) Prometheus"
     echo "   3) Grafana"
-    echo "   4) Exit"
+    echo "   4) Help"
+    echo "   5) Exit"
     echo ""
-    read -p "Install [1-4]: " -e -i 4 INSTALL_CHOICE
+    read -p "Install [1-4]: " -e -i 5 INSTALL_CHOICE
 
     case $INSTALL_CHOICE in
         1)
@@ -250,6 +278,9 @@ function setChoise()
         _installGrafana=1
         ;;
         4)
+        usage
+        ;;
+        5)
         _exit
         ;;
     esac
@@ -281,4 +312,18 @@ function setChoise()
 
 }
 
-setChoise
+# setChoise
+
+if [[ -z "$1" ]]; then
+    setChoise
+else
+    # Checks arguments
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in
+                -a|--auto) auto_install; ;;
+                -h|--help) usage ;;
+            *) echo "Unknown parameter passed: $1"; exit 1 ;;
+        esac
+        shift
+    done
+fi
