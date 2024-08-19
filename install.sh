@@ -278,7 +278,7 @@ firewall-cmd --reload
 
 }
 
-checkDistro()
+checkDistro
 
 auto_install() {
     installPrometheus auto
