@@ -47,6 +47,24 @@ _exit() {
     exit 0
 }
 
+# Checks supporting distros
+checkDistro() {
+    # Checking distro
+    if [ -e /etc/centos-release ]; then
+        DISTRO=`cat /etc/redhat-release | awk '{print $1,$4}'`
+        RPM=1
+    elif [ -e /etc/fedora-release ]; then
+        DISTRO=`cat /etc/fedora-release | awk '{print ($1,$3~/^[0-9]/?$3:$4)}'`
+        RPM=1
+    elif [ -e /etc/os-release ]; then
+        DISTRO=`lsb_release -d | awk -F"\t" '{print $2}'`
+        RPM=0
+    else
+        Error "Your distribution is not supported (yet)"
+        exit 1
+    fi
+}
+
 # Options
 setupNodeExporter() {
 
@@ -209,8 +227,9 @@ installPrometheus() {
 }
 
 installGrafana() {
-  
-  echo -e "
+
+    if [[ "$RPM" -eq "1" ]]; then
+        echo -e "
 [grafana]
 name=grafana
 baseurl=https://packages.grafana.com/oss/rpm
@@ -223,6 +242,15 @@ sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 " > /etc/yum.repos.d/grafana.repo
 
 yum install grafana -y
+    else
+        # Install Grafana for Debian
+        echo "deb https://packages.grafana.com/oss/deb stable main" > /etc/apt/sources.list.d/grafana.list
+        curl https://packages.grafana.com/gpg.key | apt-key add -
+        apt-get update
+        apt-get install grafana -y
+    fi
+  
+  
 
 systemctl daemon-reload
 systemctl enable --now grafana-server
@@ -249,6 +277,8 @@ fi
 firewall-cmd --reload
 
 }
+
+checkDistro()
 
 auto_install() {
     installPrometheus auto
