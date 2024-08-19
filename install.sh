@@ -76,7 +76,10 @@ After=network-online.target
 User=node_exporter
 Group=node_exporter
 Type=simple
-ExecStart=/usr/local/bin/node_exporter
+ExecStart=/usr/local/bin/node_exporter \
+--collector.processes \
+--collector.filesystem.ignored-mount-points="^/(dev|proc|sys|var/lib/docker/.+)($|/)"
+Restart=always
 [Install]
 WantedBy=multi-user.target' > /etc/systemd/system/node_exporter.service
 
