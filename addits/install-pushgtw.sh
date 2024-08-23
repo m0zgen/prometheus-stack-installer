@@ -20,6 +20,12 @@ if [ ! -d $_download_dir ]; then
     mkdir -p $_download_dir
 fi
 
+# If pushgateway is already installed, exit
+if [ -f /usr/local/bin/pushgateway ]; then
+    echo "Pushgateway is already installed"
+    exit 0
+fi
+
 function install_pushgateway {
 
     # Clean download dir
