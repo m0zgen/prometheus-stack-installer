@@ -9,7 +9,7 @@ SCRIPT_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd); cd $SCRIPT_PATH
 
 # Variables
 # -------------------------------------------------------------------------------------------\
-_download_dir="${SCRIPT_PATH}/pushgateway"
+_download_dir="${SCRIPT_PATH}/downloads"
 
 
 # Functions
