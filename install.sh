@@ -326,7 +326,7 @@ installAlertmanager() {
         echo "Skip..."
         return
     else
-        bash $SCRIPT_PATH/install-alertmanager.sh
+        bash $SCRIPT_PATH/addits/install-alertmanager.sh
     fi
 }
 
@@ -338,7 +338,7 @@ installPushgateway() {
         echo "Skip..."
         return
     else
-        bash $SCRIPT_PATH/install-pushgtw.sh
+        bash $SCRIPT_PATH/addits/install-pushgtw.sh
     fi
 }
 
