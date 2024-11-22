@@ -9,16 +9,13 @@
 # Envs
 # ---------------------------------------------------\
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
-SCRIPT_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
+SCRIPT_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd); cd $SCRIPT_PATH
 
 # POSIX / Reset in case getopts has been used previously in the shell.
 OPTIND=1
 
 _configPrometheus="/etc/prometheus/prometheus.yml"
 _install=$SCRIPT_PATH/installs
-_serverIP=`hostname -I | awk '{print $1}'`
-
-# Functions
 
 # Help information
 usage() {
@@ -60,7 +57,7 @@ checkDistro() {
         DISTRO=`lsb_release -d | awk -F"\t" '{print $2}'`
         RPM=0
     else
-        Error "Your distribution is not supported (yet)"
+        echo -e "Your distribution is not supported (yet). Exit. Bye!"
         exit 1
     fi
 }
@@ -144,6 +141,7 @@ installExporter() {
         echo "Skip..."
         return
     else
+        local _serverIP=`hostname -I | awk '{print $1}'`
         # Temporary catalog
         cd $SCRIPT_PATH
 
@@ -320,12 +318,38 @@ fi
 
 }
 
+# Install alertmanager with run alertmanager.sh function
+installAlertmanager() {
+    # If /usr/local/bin/alertmanager exists
+    if [ -f /usr/local/bin/alertmanager ]; then
+        echo "Alertmanager already installed!"
+        echo "Skip..."
+        return
+    else
+        bash $SCRIPT_PATH/install-alertmanager.sh
+    fi
+}
+
+# Install pushgateway with run pushgateway.sh function
+installPushgateway() {
+    # If /usr/local/bin/pushgateway exists
+    if [ -f /usr/local/bin/pushgateway ]; then
+        echo "Pushgateway already installed!"
+        echo "Skip..."
+        return
+    else
+        bash $SCRIPT_PATH/install-pushgtw.sh
+    fi
+}
+
 checkDistro
 
 auto_install() {
     installPrometheus auto
     installExporter auto
     installGrafana auto
+    installAlertmanager auto
+    installPushgateway auto
 }
 
 function setChoise()
@@ -334,8 +358,10 @@ function setChoise()
     echo "   1) Exporter"
     echo "   2) Prometheus"
     echo "   3) Grafana"
-    echo "   4) Help"
-    echo "   5) Exit"
+    echo "   4) Alertmanager"
+    echo "   5) Pushgateway"
+    echo "   6) Help"
+    echo "   7) Exit"
     echo ""
     read -p "Install [1-4]: " -e -i 5 INSTALL_CHOICE
 
@@ -350,9 +376,15 @@ function setChoise()
         _installGrafana=1
         ;;
         4)
-        usage
+        _installAlertmanager=1
         ;;
         5)
+        _installPushgateway=1
+        ;;
+        6)
+        usage
+        ;;
+        7)
         _exit
         ;;
     esac
@@ -379,6 +411,18 @@ function setChoise()
     if [[ "$_installGrafana" == 1 ]]; then
         if confirm "Install Grafana (y/n)?"; then
                 installGrafana
+        fi
+    fi
+
+    if [[ "$_installAlertmanager" == 1 ]]; then
+        if confirm "Install Alertmanager (y/n)?"; then
+                installAlertmanager
+        fi
+    fi
+
+    if [[ "$_installPushgateway" == 1 ]]; then
+        if confirm "Install Pushgateway (y/n)?"; then
+                installPushgateway
         fi
     fi
 
