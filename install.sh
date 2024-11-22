@@ -360,8 +360,9 @@ function setChoise()
     echo "   3) Grafana"
     echo "   4) Alertmanager"
     echo "   5) Pushgateway"
-    echo "   6) Help"
-    echo "   7) Exit"
+    echo "   6) Auto install"
+    echo "   7) Help"
+    echo "   8) Exit"
     echo ""
     read -p "Install [1-4]: " -e -i 5 INSTALL_CHOICE
 
@@ -382,9 +383,12 @@ function setChoise()
         _installPushgateway=1
         ;;
         6)
-        usage
+        _installAuto=1
         ;;
         7)
+        usage
+        ;;
+        8)
         _exit
         ;;
     esac
@@ -424,6 +428,10 @@ function setChoise()
         if confirm "Install Pushgateway (y/n)?"; then
                 installPushgateway
         fi
+    fi
+
+    if [[ "$_installAuto" == 1 ]]; then
+        auto_install
     fi
 
 }
