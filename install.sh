@@ -364,7 +364,7 @@ function setChoise()
     echo "   7) Help"
     echo "   8) Exit"
     echo ""
-    read -p "Install [1-4]: " -e -i 5 INSTALL_CHOICE
+    read -p "Install [1-8]: " -e -i 8 INSTALL_CHOICE
 
     case $INSTALL_CHOICE in
         1)
